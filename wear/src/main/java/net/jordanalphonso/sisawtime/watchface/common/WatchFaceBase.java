@@ -5,6 +5,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+import java.util.Calendar;
+
 /**
  * Created by jordan on 11/11/16.
  */
@@ -14,6 +16,8 @@ public class WatchFaceBase {
     private Canvas canvas;
 
     private Rect bounds;
+
+    private Calendar calendar;
 
     private Paint white;
 
@@ -27,14 +31,24 @@ public class WatchFaceBase {
         return canvas;
     }
 
-    public void initialize(Canvas canvas, Rect bounds) {
+    protected Calendar getCalendar() { return calendar; }
+
+    public void initialize(Canvas canvas, Rect bounds, Calendar cal) {
         this.canvas = canvas;
         this.bounds = bounds;
+        this.calendar = cal;
     }
 
-    protected Integer getRadius() {
+    protected Double getRadius() {
         if (getBounds() != null) {
-            return getBounds().height()/2;
+            return (double)getBounds().height()/2;
+        }
+        return null;
+    }
+
+    protected Double getRadius(double  percent) {
+        if (getRadius() != null) {
+            return getRadius()*percent;
         }
         return null;
     }

@@ -27,7 +27,7 @@
                 android:resource="@drawable/images" />
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
-                <category android:name="com.google.android.wearable.warchface.category.WATCH_FACE" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
             </intent-filter>
         </service>
 
