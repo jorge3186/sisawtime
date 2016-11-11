@@ -14,8 +14,12 @@ public class TimeUtils {
 
     public static String generateTime(Calendar cal) {
         cal.setTime(new java.util.Date());
-        return String.valueOf(cal.get(Calendar.HOUR)) + "."
-                + String.valueOf(cal.get(Calendar.MINUTE)) + "."
-                + String.valueOf(cal.get(Calendar.SECOND));
+        String hr = String.valueOf(cal.get(Calendar.HOUR));
+        String mn = String.valueOf(cal.get(Calendar.MINUTE)).length() == 1 ?
+                "0" + String.valueOf(cal.get(Calendar.MINUTE)) : String.valueOf(cal.get(Calendar.MINUTE));
+        String sec = String.valueOf(cal.get(Calendar.SECOND)).length() == 1 ?
+                "0" + String.valueOf(cal.get(Calendar.SECOND)) : String.valueOf(cal.get(Calendar.SECOND));
+
+        return hr + "." + mn + "." + sec;
     }
 }
