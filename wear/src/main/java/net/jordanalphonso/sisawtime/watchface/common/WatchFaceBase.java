@@ -21,6 +21,8 @@ public class WatchFaceBase {
 
     private Paint white;
 
+    private Paint grey;
+
     private Paint black;
 
     protected Rect getBounds() {
@@ -69,5 +71,14 @@ public class WatchFaceBase {
             white.setColor(Color.WHITE);
         }
         return white;
+    }
+
+    public Paint getGrey() {
+        if (grey == null) {
+            grey = new Paint();
+            grey.setAntiAlias(true);
+            grey.setColor(Color.GRAY);
+        }
+        return grey;
     }
 }

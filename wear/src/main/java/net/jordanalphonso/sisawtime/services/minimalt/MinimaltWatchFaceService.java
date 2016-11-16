@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.os.Handler;
@@ -13,6 +14,9 @@ import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
 
+import net.jordanalphonso.sisawtime.broadcastreceiver.CustomBroadcastReceiver;
+import net.jordanalphonso.sisawtime.handler.time.CustomTimeHandler;
+import net.jordanalphonso.sisawtime.utils.minimalt.MinimaltUtil;
 import net.jordanalphonso.sisawtime.watchface.common.WatchFace;
 import net.jordanalphonso.sisawtime.watchface.minimalt.MinimaltMain;
 
@@ -32,44 +36,27 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
 
     private class MinimaltEngine extends CanvasWatchFaceService.Engine {
 
-        private final long TICK_PERIOD_MILLIS = TimeUnit.SECONDS.toMillis(1);
+        private final long REFRESH_RATE_MILLIS = TimeUnit.MILLISECONDS.toMillis(25);
 
         private final int MSG_UPDATE_TIME = 0;
+
+        private CustomTimeHandler timeHandler;
+
+        private CustomBroadcastReceiver timeZoneReciever;
 
         private Calendar calendar;
 
         private boolean registeredTimeZoneReceiver;
 
-        final Handler updateTimeHandler = new Handler() {
-            @Override
-            public void handleMessage(Message message) {
-                switch (message.what) {
-                    case MSG_UPDATE_TIME:
-                        invalidate();
-                        if (shouldTimerBeRunning()) {
-                            long timeMs = System.currentTimeMillis();
-                            long delayMs = TICK_PERIOD_MILLIS
-                                    - (timeMs % TICK_PERIOD_MILLIS);
-                            updateTimeHandler
-                                    .sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
-                        }
-                        break;
-                }
-            }
-        };
-
-        final BroadcastReceiver timeZoneReciever = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                calendar.setTimeZone(TimeZone.getDefault());
-                invalidate();
-            }
-        };
+        private MinimaltMain minimalt;
 
         @Override
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
             calendar = Calendar.getInstance();
+            timeHandler = new CustomTimeHandler(this, REFRESH_RATE_MILLIS);
+            timeZoneReciever = new CustomBroadcastReceiver(this, calendar);
+            MinimaltUtil.setResources(getResources());
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(MinimaltWatchFaceService.this)
                     .setAcceptsTapEvents(true)
@@ -83,9 +70,9 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
             super.onDraw(canvas, bounds);
-            WatchFace minimalt = new MinimaltMain();
+            minimalt = new MinimaltMain();
             minimalt.initialize(canvas, bounds, calendar);
-            minimalt.draw();
+            minimalt.draw(isInAmbientMode());
         }
 
         @Override
@@ -95,9 +82,9 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
         }
 
         private void updateTimer() {
-            updateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+            timeHandler.removeMessages(MSG_UPDATE_TIME);
             if (shouldTimerBeRunning()) {
-                updateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+                timeHandler.sendEmptyMessage(MSG_UPDATE_TIME);
             }
         }
 
@@ -132,6 +119,22 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
             }
             registeredTimeZoneReceiver = false;
             MinimaltWatchFaceService.this.unregisterReceiver(timeZoneReciever);
+        }
+
+        @Override
+        public void onTapCommand(int tapType, int x, int y, long eventTime) {
+            if (MinimaltWatchFaceService.TAP_TYPE_TAP == tapType) {
+                MinimaltUtil.changeColor();
+                invalidate();
+            } else {
+                super.onTapCommand(tapType, x, y, eventTime);
+            }
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            timeHandler.removeMessages(MSG_UPDATE_TIME);
         }
     }
 }

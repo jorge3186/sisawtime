@@ -11,7 +11,7 @@ import java.util.Calendar;
 
 public interface WatchFace {
 
-    void draw();
+    void draw(boolean ambientMode);
 
     void initialize(Canvas canvas, Rect bounds, Calendar cal);
 
