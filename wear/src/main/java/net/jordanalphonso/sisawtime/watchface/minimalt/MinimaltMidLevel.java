@@ -88,7 +88,7 @@ public class MinimaltMidLevel extends WatchFaceBase implements WatchFace {
                 getBounds().exactCenterY()+20, p);
 
         p.setColorFilter(null);
-        getCanvas().drawText("15460", getBounds().exactCenterX()-(getBounds().width()/4.9F),
+        getCanvas().drawText(MinimaltUtil.getDailyStepCount(), getBounds().exactCenterX()-(getBounds().width()/4.9F),
                 getBounds().exactCenterY()+60, p);
 
         getCanvas().drawLine((getBounds().exactCenterX()-(getBounds().width()/3.6F)), getBounds().exactCenterY()+65,

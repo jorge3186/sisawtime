@@ -20,6 +20,8 @@ public class MinimaltUtil extends WatchFaceUtil {
 
     private static Integer currentSelection;
 
+    private static Integer dailyStepCount;
+
     private static Resources resources;
 
     private static final Map<Integer, String> colorMap = new LinkedHashMap<Integer, String>() {
@@ -68,5 +70,17 @@ public class MinimaltUtil extends WatchFaceUtil {
     public static String getAMPM(Calendar cal) {
         List<String> time = TimeUtils.generateTime(cal);
         return time.get(3);
+    }
+
+    public static void updateStepCount(Integer stepCount) {
+        MinimaltUtil.dailyStepCount = stepCount;
+    }
+
+    public static String getDailyStepCount() {
+        if (dailyStepCount == null) {
+            return "0";
+        } else {
+            return dailyStepCount.toString();
+        }
     }
 }
