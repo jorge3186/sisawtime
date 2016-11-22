@@ -22,6 +22,8 @@ public class MinimaltUtil extends WatchFaceUtil {
 
     private static Integer dailyStepCount;
 
+    private static Integer dailyStepGoal;
+
     private static Resources resources;
 
     private static final Map<Integer, String> colorMap = new LinkedHashMap<Integer, String>() {
@@ -81,6 +83,18 @@ public class MinimaltUtil extends WatchFaceUtil {
             return "0";
         } else {
             return dailyStepCount.toString();
+        }
+    }
+
+    public static void updateStepGoal(Integer goal) {
+        MinimaltUtil.dailyStepGoal = goal;
+    }
+
+    public static String getDailyStepGoal (){
+        if (dailyStepGoal == null) {
+            return "0";
+        } else {
+            return dailyStepGoal.toString();
         }
     }
 }

@@ -1,40 +1,30 @@
 package net.jordanalphonso.sisawtime.services.minimalt;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
-import com.google.android.gms.fitness.data.Goal;
-import com.google.android.gms.fitness.request.GoalsReadRequest;
 import com.google.android.gms.fitness.result.DailyTotalResult;
-import com.google.android.gms.fitness.result.GoalsResult;
 
 import net.jordanalphonso.sisawtime.broadcastreceiver.CustomBroadcastReceiver;
 import net.jordanalphonso.sisawtime.handler.time.CustomTimeHandler;
 import net.jordanalphonso.sisawtime.utils.minimalt.MinimaltUtil;
-import net.jordanalphonso.sisawtime.watchface.common.WatchFace;
 import net.jordanalphonso.sisawtime.watchface.minimalt.MinimaltMain;
 
 import java.util.Calendar;
@@ -53,11 +43,12 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
     }
 
     private class MinimaltEngine extends CanvasWatchFaceService.Engine implements
-            GoogleApiClient.ConnectionCallbacks {
-
+            GoogleApiClient.ConnectionCallbacks,
+            GoogleApiClient.OnConnectionFailedListener,
+            ResultCallback<DailyTotalResult> {
         private GoogleApiClient googleApiClient;
 
-        private final long REFRESH_RATE_MILLIS = TimeUnit.MILLISECONDS.toMillis(25);
+        private final long REFRESH_RATE_MILLIS = TimeUnit.MILLISECONDS.toMillis(40);
 
         private final int MSG_UPDATE_TIME = 0;
 
@@ -77,27 +68,26 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
             calendar = Calendar.getInstance();
             timeHandler = new CustomTimeHandler(this, REFRESH_RATE_MILLIS);
             timeZoneReciever = new CustomBroadcastReceiver(this, calendar);
+            minimalt = new MinimaltMain();
             MinimaltUtil.setResources(getResources());
 
             googleApiClient = new GoogleApiClient.Builder(MinimaltWatchFaceService.this)
                     .addConnectionCallbacks(this)
-                    .addApi(Fitness.GOALS_API)
                     .addApi(Fitness.HISTORY_API)
-                    .addApi(Fitness.RECORDING_API)
                     .useDefaultAccount()
                     .build();
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(MinimaltWatchFaceService.this)
                     .setAcceptsTapEvents(true)
-                    .setHideStatusBar(true)
-                    .setShowUnreadCountIndicator(true)
+                    .setShowUnreadCountIndicator(false)
+                    .setCardProgressMode(WatchFaceStyle.PROGRESS_MODE_DISPLAY)
+                    .setStatusBarGravity(WatchFaceStyle.PROTECT_STATUS_BAR)
                     .build());
         }
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
             super.onDraw(canvas, bounds);
-            minimalt = new MinimaltMain();
             minimalt.initialize(canvas, bounds, calendar);
             minimalt.draw(isInAmbientMode());
         }
@@ -105,7 +95,6 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onTimeTick() {
             super.onTimeTick();
-            getStepsCount();
             invalidate();
         }
 
@@ -136,6 +125,18 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
             updateTimer();
         }
 
+        @Override
+        public void onAmbientModeChanged(boolean inAmbientMode) {
+            super.onAmbientModeChanged(inAmbientMode);
+            if (inAmbientMode) {
+                invalidate();
+                timeHandler.removeMessages(MSG_UPDATE_TIME);
+            } else {
+                invalidate();
+                timeHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+            }
+        }
+
         private void registerReceiver() {
             if (registeredTimeZoneReceiver) {
                 return;
@@ -157,18 +158,15 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
             if (googleApiClient != null && googleApiClient.isConnected()) {
                 PendingResult<DailyTotalResult> pendingSteps = Fitness.HistoryApi.readDailyTotal(
                         googleApiClient, DataType.TYPE_STEP_COUNT_DELTA);
-                DailyTotalResult results = pendingSteps.await();
-                List<DataPoint> points = results.getTotal().getDataPoints();
-                if (points != null && !points.isEmpty()) {
-                    MinimaltUtil.updateStepCount(points.get(0).getValue(Field.FIELD_STEPS).asInt());
-                }
+                pendingSteps.setResultCallback(this);
+            }
+        }
 
-                PendingResult<GoalsResult> dailyGoal = Fitness.GoalsApi.readCurrentGoals(
-                        googleApiClient, new GoalsReadRequest.Builder()
-                                                .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                                                .build());
-                GoalsResult goals = dailyGoal.await();
-                List<Goal> currentGoals = goals.getGoals();
+        private void getStepsGoal() {
+            if (googleApiClient != null && googleApiClient.isConnected()) {
+                PendingResult<DailyTotalResult> pendingSteps = Fitness.HistoryApi.readDailyTotal(
+                        googleApiClient, DataType.TYPE_STEP_COUNT_DELTA);
+                pendingSteps.setResultCallback(this);
             }
         }
 
@@ -196,12 +194,28 @@ public class MinimaltWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onConnectionSuspended(int i) {
-            //log it later
+            Log.d("Service", "Connection Suspended: "+i);
         }
 
         private void subscribeToSteps() {
             Fitness.RecordingApi.subscribe(
                     googleApiClient, DataType.TYPE_STEP_COUNT_DELTA);
+        }
+
+        @Override
+        public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+            Log.d("Service", "Connection Failed");
+            Log.d("Service", "Error: "+connectionResult.getErrorMessage());
+        }
+
+        @Override
+        public void onResult(@NonNull DailyTotalResult dailyTotalResult) {
+            if (dailyTotalResult.getStatus().isSuccess()) {
+                List<DataPoint> points = dailyTotalResult.getTotal().getDataPoints();
+                if (!points.isEmpty()) {
+                    MinimaltUtil.updateStepCount(points.get(0).getValue(Field.FIELD_STEPS).asInt());
+                }
+            }
         }
     }
 }

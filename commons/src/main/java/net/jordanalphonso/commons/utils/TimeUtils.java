@@ -65,14 +65,27 @@ public class TimeUtils {
         return cal.get(Calendar.SECOND);
     }
 
+    public static Integer getCurrentMinute(Calendar cal) {
+        cal.setTime(new java.util.Date());
+        return cal.get(Calendar.MINUTE);
+    }
+
     public static Integer getCurrentMillisecond(Calendar cal) {
         cal.setTime(new java.util.Date());
         return cal.get(Calendar.MILLISECOND);
     }
 
     public static int getCurrentHour(Calendar cal) {
+        return getCurrentHour(cal, false);
+    }
+
+    public static int getCurrentHour(Calendar cal, boolean twentyfour) {
         cal.setTime(new java.util.Date());
-        return cal.get(Calendar.HOUR_OF_DAY);
+        if (twentyfour) {
+            return cal.get(Calendar.HOUR_OF_DAY);
+        } else {
+            return cal.get(Calendar.HOUR_OF_DAY);
+        }
     }
 
     public static String getCurrentDayOfWeek(Calendar cal) {

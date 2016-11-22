@@ -13,11 +13,11 @@ public class MinimaltTopLevel extends WatchFaceBase implements WatchFace {
 
     @Override
     public void draw(boolean ambientMode) {
-        generateTime();
-        generateUIStrokes();
+        generateTime(ambientMode);
+        generateUIStrokes(ambientMode);
     }
 
-    private void generateTime() {
+    private void generateTime(boolean ambientMode) {
         Paint timePaint = new Paint();
         timePaint.setAntiAlias(true);
         timePaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
@@ -25,17 +25,17 @@ public class MinimaltTopLevel extends WatchFaceBase implements WatchFace {
         timePaint.setColor(Color.WHITE);
 
         getCanvas().drawText(MinimaltUtil.generateTimeString(getCalendar(), false),
-                getBounds().exactCenterX()/2.2F,getBounds().exactCenterY()/1.25F, timePaint);
+                getBounds().exactCenterX()/1.9F,getBounds().exactCenterY()/1.25F, timePaint);
 
         timePaint.setTextSize(12);
         timePaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
         getCanvas().drawText(MinimaltUtil.getAMPM(getCalendar()),
-                getBounds().exactCenterX()*1.525F, getBounds().exactCenterY()/1.25F, timePaint);
+                getBounds().exactCenterX()*1.5F, getBounds().exactCenterY()/1.25F, timePaint);
     }
 
-    private void generateUIStrokes() {
+    private void generateUIStrokes(boolean ambientMode) {
         Paint p = new Paint();
-        p.setAntiAlias(true);
+        p.setAntiAlias(!ambientMode);
         p.setStrokeWidth(1.5F);
         p.setColor(MinimaltUtil.getColor());
 
@@ -51,21 +51,23 @@ public class MinimaltTopLevel extends WatchFaceBase implements WatchFace {
         float stopXSecs = (((secs*1000)+millis)/60000F) * (max - min) + min;
         float stopXHr = (((hr*150000)+(secs*1000)+millis)/3600000F) * (max - min) + min;
 
-        //Milliseconds animated line
-        if (secs % 2 == 0) {
-            getCanvas().drawLine(min, getBounds().exactCenterY()/1.15F,
-                    stopXMillisEven, getBounds().exactCenterY()/1.15F, p);
-        } else {
-            getCanvas().drawLine(max, getBounds().exactCenterY()/1.15F,
-                    stopXMillisOdd, getBounds().exactCenterY()/1.15F, p);
+        if (!ambientMode) {
+            //Milliseconds animated line
+            if (secs % 2 == 0) {
+                getCanvas().drawLine(min, getBounds().exactCenterY()/1.15F,
+                        stopXMillisEven, getBounds().exactCenterY()/1.15F, p);
+            } else {
+                getCanvas().drawLine(max, getBounds().exactCenterY()/1.15F,
+                        stopXMillisOdd, getBounds().exactCenterY()/1.15F, p);
+            }
+
+            //Seconds animated line
+            getCanvas().drawLine(min, getBounds().exactCenterY()/1.1F,
+                    stopXSecs, getBounds().exactCenterY()/1.1F, p);
+
+            //hour animated line
+            getCanvas().drawLine(min, getBounds().exactCenterY()/1.05F,
+                    stopXHr, getBounds().exactCenterY()/1.05F, p);
         }
-
-        //Seconds animated line
-        getCanvas().drawLine(min, getBounds().exactCenterY()/1.1F,
-                stopXSecs, getBounds().exactCenterY()/1.1F, p);
-
-        //hour animated line
-        getCanvas().drawLine(min, getBounds().exactCenterY()/1.05F,
-                stopXHr, getBounds().exactCenterY()/1.05F, p);
     }
 }

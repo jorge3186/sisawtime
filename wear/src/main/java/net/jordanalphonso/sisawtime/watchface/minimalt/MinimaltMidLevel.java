@@ -32,7 +32,7 @@ public class MinimaltMidLevel extends WatchFaceBase implements WatchFace {
 
     private void generateBoxes(boolean ambientMode) {
         Paint p = new Paint();
-        p.setAntiAlias(!ambientMode);
+        p.setAntiAlias(true);
         p.setColor(MinimaltUtil.getColor());
         p.setStrokeWidth(0.6F);
         p.setStyle(Paint.Style.STROKE);
@@ -87,11 +87,23 @@ public class MinimaltMidLevel extends WatchFaceBase implements WatchFace {
         getCanvas().drawBitmap(scaledIcon, getBounds().exactCenterX()-(getBounds().width()/4.1F),
                 getBounds().exactCenterY()+20, p);
 
-        p.setColorFilter(null);
-        getCanvas().drawText(MinimaltUtil.getDailyStepCount(), getBounds().exactCenterX()-(getBounds().width()/4.9F),
-                getBounds().exactCenterY()+60, p);
+        if (!ambientMode) {
+            p.setColorFilter(null);
+            getCanvas().drawText(MinimaltUtil.getDailyStepCount(), getBounds().exactCenterX()-(getBounds().width()/4.9F),
+                    getBounds().exactCenterY()+60, p);
 
-        getCanvas().drawLine((getBounds().exactCenterX()-(getBounds().width()/3.6F)), getBounds().exactCenterY()+65,
-                getBounds().exactCenterX()-(getBounds().width()/3.6F)+48, getBounds().exactCenterY()+65, getGrey());
+            getCanvas().drawLine((getBounds().exactCenterX()-(getBounds().width()/3.6F)), getBounds().exactCenterY()+65,
+                    getBounds().exactCenterX()-(getBounds().width()/3.6F)+48, getBounds().exactCenterY()+65, getGrey());
+
+            int  minutes = (TimeUtils.getCurrentHour(getCalendar(), true)*60)
+                    +TimeUtils.getCurrentMinute(getCalendar());
+
+            float min = (getBounds().exactCenterX()-(getBounds().width()/3.6F));
+            float max = getBounds().exactCenterX()-(getBounds().width()/3.6F)+48;
+
+            float stepsMax = (minutes/1440F) * (max - min) + min;;
+
+            getCanvas().drawLine(min, getBounds().exactCenterY()+65, stepsMax, getBounds().exactCenterY()+65, p);
+        }
     }
 }

@@ -21,24 +21,27 @@ public class MinimaltBackground extends WatchFaceBase implements WatchFace {
 
     @Override
     public void draw(boolean ambientMode) {
-        generateBackgroundGradient();
-        generateActiveSecondsStroke();
+        generateBackgroundGradient(ambientMode);
+        if (!ambientMode) {
+            generateActiveSecondsStroke();
+        }
         generateTickStrokes();
         generateSecondsStrokes();
     }
 
-    private void generateBackgroundGradient() {
-        Paint bg = new Paint();
-        bg.setColor(Color.BLACK);
-        bg.setStyle(Paint.Style.FILL_AND_STROKE);
-        bg.setShader(new RadialGradient(getBounds().exactCenterX(), getBounds().exactCenterY(), (float)getRadius().intValue(),
-                MinimaltUtil.getColor(), Color.BLACK, Shader.TileMode.CLAMP));
-        bg.setAntiAlias(true);
-        bg.setAlpha(60);
+    private void generateBackgroundGradient(boolean ambientMode) {
         getCanvas().drawColor(Color.BLACK);
-        getCanvas().drawCircle(getBounds().exactCenterX(), getBounds().exactCenterY(),
-                (float)getRadius().intValue(), bg);
-
+        if (!ambientMode) {
+            Paint bg = new Paint();
+            bg.setColor(Color.BLACK);
+            bg.setStyle(Paint.Style.FILL_AND_STROKE);
+            bg.setShader(new RadialGradient(getBounds().exactCenterX(), getBounds().exactCenterY(), (float)getRadius().intValue(),
+                    MinimaltUtil.getColor(), Color.BLACK, Shader.TileMode.CLAMP));
+            bg.setAntiAlias(true);
+            bg.setAlpha(60);
+            getCanvas().drawCircle(getBounds().exactCenterX(), getBounds().exactCenterY(),
+                    (float)getRadius().intValue(), bg);
+        }
     }
 
     private void generateTickStrokes() {
