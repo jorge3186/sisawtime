@@ -4,7 +4,10 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 
+import net.jordanalphonso.commons.utils.StringUtils;
 import net.jordanalphonso.commons.utils.TimeUtils;
+import net.jordanalphonso.sisawservices.constants.OpenWeatherMapUtil;
+import net.jordanalphonso.sisawservices.model.openweathermap.DailyWeather;
 import net.jordanalphonso.sisawtime.utils.WatchFaceUtil;
 
 import java.util.Calendar;
@@ -24,7 +27,13 @@ public class MinimaltUtil extends WatchFaceUtil {
 
     private static Integer dailyStepGoal;
 
+    private static DailyWeather weather;
+
     private static Resources resources;
+
+    private static boolean askForLocations = true;
+
+    private static boolean locationsGranted = false;
 
     private static final Map<Integer, String> colorMap = new LinkedHashMap<Integer, String>() {
         {
@@ -61,10 +70,10 @@ public class MinimaltUtil extends WatchFaceUtil {
         List<String> timeGrab = TimeUtils.generateTime(cal);
 
         time.append(timeGrab.get(0));
-        time.append(".");
+        time.append(":");
         time.append(timeGrab.get(1));
         if (includeSeconds) {
-            time.append(".").append(timeGrab.get(2));
+            time.append(":").append(timeGrab.get(2));
         }
         return time.toString();
     }
@@ -78,11 +87,42 @@ public class MinimaltUtil extends WatchFaceUtil {
         MinimaltUtil.dailyStepCount = stepCount;
     }
 
+    public static void updateWeather(DailyWeather dailyWeather) {
+        MinimaltUtil.weather = dailyWeather;
+    }
+
     public static String getDailyStepCount() {
         if (dailyStepCount == null) {
-            return "0";
+            return StringUtils.E;
         } else {
             return dailyStepCount.toString();
+        }
+    }
+
+    public static DailyWeather getWeather() {
+        return weather;
+    }
+
+    public static String getTemperature(boolean celsius) {
+        if (weather == null) {
+            return StringUtils.E;
+        } else {
+            if (celsius) {
+                return weather.getMain().getTemperatureC()
+                        .toString().split("\\.")[0] + "°";
+            } else {
+                return weather.getMain().getTemperatureInF()
+                        .toString().split("\\.")[0] + "°";
+            }
+        }
+    }
+
+    public static String getWeatherSummary() {
+        if (weather == null) {
+            return StringUtils.E;
+        } else {
+            String icon = weather.getWeather().get(0).getIcon();
+            return OpenWeatherMapUtil.getWeatherIcon(icon);
         }
     }
 
@@ -92,9 +132,25 @@ public class MinimaltUtil extends WatchFaceUtil {
 
     public static String getDailyStepGoal (){
         if (dailyStepGoal == null) {
-            return "0";
+            return StringUtils.E;
         } else {
             return dailyStepGoal.toString();
         }
+    }
+
+    public static boolean isLocationsGranted() {
+        return MinimaltUtil.locationsGranted;
+    }
+
+    public static void updatedLocationsGranted(boolean locationsGranted) {
+        MinimaltUtil.locationsGranted = locationsGranted;
+    }
+
+    public static void setAskForLocations(boolean askForLocations) {
+        MinimaltUtil.askForLocations = askForLocations;
+    }
+
+    public static boolean isAskForLocations() {
+        return MinimaltUtil.askForLocations;
     }
 }

@@ -23,14 +23,10 @@ public class MinimaltTopLevel extends WatchFaceBase implements WatchFace {
         timePaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
         timePaint.setTextSize(64);
         timePaint.setColor(Color.WHITE);
+        timePaint.setTextAlign(Paint.Align.CENTER);
 
         getCanvas().drawText(MinimaltUtil.generateTimeString(getCalendar(), false),
-                getBounds().exactCenterX()/1.9F,getBounds().exactCenterY()/1.25F, timePaint);
-
-        timePaint.setTextSize(12);
-        timePaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
-        getCanvas().drawText(MinimaltUtil.getAMPM(getCalendar()),
-                getBounds().exactCenterX()*1.5F, getBounds().exactCenterY()/1.25F, timePaint);
+                getBounds().exactCenterX(),getBounds().exactCenterY()/1.25F, timePaint);
     }
 
     private void generateUIStrokes(boolean ambientMode) {

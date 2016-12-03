@@ -10,8 +10,10 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.res.ResourcesCompat;
 
+import net.jordanalphonso.commons.utils.StringUtils;
 import net.jordanalphonso.commons.utils.TimeUtils;
 import net.jordanalphonso.sisawtime.R;
+import net.jordanalphonso.sisawtime.services.minimalt.MinimaltWatchFaceService;
 import net.jordanalphonso.sisawtime.utils.minimalt.MinimaltUtil;
 import net.jordanalphonso.sisawtime.watchface.common.WatchFace;
 import net.jordanalphonso.sisawtime.watchface.common.WatchFaceBase;
@@ -25,35 +27,9 @@ public class MinimaltMidLevel extends WatchFaceBase implements WatchFace {
 
     @Override
     public void draw(boolean ambientMode) {
-        generateBoxes(ambientMode);
         populateDateBox(ambientMode);
         populateStepsBox(ambientMode);
-    }
-
-    private void generateBoxes(boolean ambientMode) {
-        Paint p = new Paint();
-        p.setAntiAlias(true);
-        p.setColor(MinimaltUtil.getColor());
-        p.setStrokeWidth(0.6F);
-        p.setStyle(Paint.Style.STROKE);
-
-        getCanvas().save();
-        getCanvas().translate((getBounds().width() / 4.75F), 40);
-        getCanvas().drawRect(getBounds().exactCenterX()/1.2F, getBounds().exactCenterY()*1.2F,
-                getBounds().exactCenterX()*1.2F, getBounds().exactCenterY()/1.2F, p);
-        getCanvas().restore();
-
-        getCanvas().save();
-        getCanvas().translate(-(getBounds().width()/4.75F), 40);
-        getCanvas().drawRect(getBounds().exactCenterX()/1.2F, getBounds().exactCenterY()*1.2F,
-                getBounds().exactCenterX()*1.2F, getBounds().exactCenterY()/1.2F, p);
-        getCanvas().restore();
-
-        getCanvas().save();
-        getCanvas().translate(0, 65);
-        getCanvas().drawRect(getBounds().exactCenterX()/1.2F, getBounds().exactCenterY()*1.2F,
-                getBounds().exactCenterX()*1.2F, getBounds().exactCenterY()/1.2F, p);
-        getCanvas().restore();
+        populateWeatherBox(ambientMode);
     }
 
     private void populateDateBox(boolean ambientMode) {
@@ -65,45 +41,48 @@ public class MinimaltMidLevel extends WatchFaceBase implements WatchFace {
         p.setTextAlign(Paint.Align.CENTER);
 
         getCanvas().drawText(TimeUtils.getCurrentDayOfWeek(getCalendar()),
-                getBounds().exactCenterX()+(getBounds().width()/4.6F), getBounds().exactCenterY()+33, p);
+                getBounds().exactCenterX()+(getBounds().width()/4.6F), getBounds().exactCenterY()+15, p);
 
         p.setTextSize(32);
         getCanvas().drawText(TimeUtils.getCurrentDayofMonth(getCalendar()),
-                getBounds().exactCenterX()+(getBounds().width()/4.6F), getBounds().exactCenterY()+62, p);
+                getBounds().exactCenterX()+(getBounds().width()/4.6F), getBounds().exactCenterY()+44, p);
     }
 
     private void populateStepsBox(boolean ambientMode) {
-        Paint p = new Paint();
-        p.setAntiAlias(!ambientMode);
-        p.setColor(MinimaltUtil.getColor());
-        p.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
-        p.setTextAlign(Paint.Align.CENTER);
-        p.setTextSize(12);
-        p.setColorFilter(new LightingColorFilter(MinimaltUtil.getColor(), 1));
+        if (!StringUtils.E.equals(MinimaltUtil.getDailyStepCount())) {
+            Paint p = new Paint();
+            p.setAntiAlias(!ambientMode);
+            p.setColor(MinimaltUtil.getColor());
+            p.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
+            p.setTextAlign(Paint.Align.CENTER);
+            p.setTextSize(14);
 
-        Bitmap runningIcon = BitmapFactory.decodeResource(
-                MinimaltUtil.getResources(), R.drawable.minimalt_running_icon);
-        Bitmap scaledIcon = Bitmap.createScaledBitmap(runningIcon, 26, 26, false);
-        getCanvas().drawBitmap(scaledIcon, getBounds().exactCenterX()-(getBounds().width()/4.1F),
-                getBounds().exactCenterY()+20, p);
+            getCanvas().drawText("STEPS", getBounds().exactCenterX()-(getBounds().width()/4.4F),
+                    getBounds().exactCenterY()+15F, p);
 
-        if (!ambientMode) {
-            p.setColorFilter(null);
-            getCanvas().drawText(MinimaltUtil.getDailyStepCount(), getBounds().exactCenterX()-(getBounds().width()/4.9F),
-                    getBounds().exactCenterY()+60, p);
+            p.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
+            p.setTextSize(12);
+            getCanvas().drawText(MinimaltUtil.getDailyStepCount(), getBounds().exactCenterX()-(getBounds().width()/4.4F),
+                    getBounds().exactCenterY()+30F, p);
+        }
+    }
 
-            getCanvas().drawLine((getBounds().exactCenterX()-(getBounds().width()/3.6F)), getBounds().exactCenterY()+65,
-                    getBounds().exactCenterX()-(getBounds().width()/3.6F)+48, getBounds().exactCenterY()+65, getGrey());
+    private void populateWeatherBox(boolean ambientMode) {
+        if (!StringUtils.E.equals(MinimaltUtil.getTemperature(false))) {
+            Paint p = new Paint();
+            p.setAntiAlias(!ambientMode);
+            p.setColor(MinimaltUtil.getColor());
+            p.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
+            p.setTextSize(28);
+            p.setTextAlign(Paint.Align.CENTER);
 
-            int  minutes = (TimeUtils.getCurrentHour(getCalendar(), true)*60)
-                    +TimeUtils.getCurrentMinute(getCalendar());
+            getCanvas().drawText(MinimaltUtil.getTemperature(false), getBounds().exactCenterX(),
+                    getBounds().exactCenterY()+25F, p);
 
-            float min = (getBounds().exactCenterX()-(getBounds().width()/3.6F));
-            float max = getBounds().exactCenterX()-(getBounds().width()/3.6F)+48;
-
-            float stepsMax = (minutes/1440F) * (max - min) + min;;
-
-            getCanvas().drawLine(min, getBounds().exactCenterY()+65, stepsMax, getBounds().exactCenterY()+65, p);
+            p.setTextSize(14);
+            p.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
+            getCanvas().drawText(MinimaltUtil.getWeatherSummary(), getBounds().exactCenterX(),
+                    getBounds().exactCenterY()+42F, p);
         }
     }
 }

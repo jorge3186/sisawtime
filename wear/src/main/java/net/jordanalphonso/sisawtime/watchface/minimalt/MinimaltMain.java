@@ -14,25 +14,29 @@ import java.util.Calendar;
 
 public class MinimaltMain extends WatchFaceBase implements WatchFace {
 
-    private MinimaltBackground background;
-    private MinimaltMidLevel midLevel;
-    private MinimaltTopLevel topLevel;
+    private MinimaltBackground background = new MinimaltBackground();
+    private MinimaltMidLevel midLevel = new MinimaltMidLevel();
+    private MinimaltTopLevel  topLevel = new MinimaltTopLevel();
+
+    private Float batteryLevel;
 
     @Override
     public void initialize(Canvas canvas, Rect bounds, Calendar cal) {
         super.initialize(canvas, bounds, cal);
-        background = new MinimaltBackground();
         background.initialize(canvas, bounds, cal);
-        midLevel = new MinimaltMidLevel();
         midLevel.initialize(canvas, bounds, cal);
-        topLevel = new MinimaltTopLevel();
         topLevel.initialize(canvas, bounds, cal);
     }
 
     @Override
     public void draw(boolean ambientMode) {
+        background.setBatteryLevel(batteryLevel);
         background.draw(ambientMode);
         midLevel.draw(ambientMode);
         topLevel.draw(ambientMode);
+    }
+
+    public void setBatteryLevel(Float batteryLevel) {
+        this.batteryLevel = batteryLevel;
     }
 }

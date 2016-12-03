@@ -4,7 +4,9 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RadialGradient;
 import android.graphics.Shader;
+import android.graphics.Typeface;
 
+import net.jordanalphonso.commons.utils.BatteryUtil;
 import net.jordanalphonso.commons.utils.TimeUtils;
 import net.jordanalphonso.sisawtime.utils.minimalt.MinimaltUtil;
 import net.jordanalphonso.sisawtime.watchface.common.WatchFace;
@@ -19,14 +21,15 @@ import java.text.DecimalFormat;
 
 public class MinimaltBackground extends WatchFaceBase implements WatchFace {
 
+    private Float batteryLevel;
+
     @Override
     public void draw(boolean ambientMode) {
         generateBackgroundGradient(ambientMode);
-        if (!ambientMode) {
-            generateActiveSecondsStroke();
-        }
+        generateActiveSecondsStroke(ambientMode);
         generateTickStrokes();
         generateSecondsStrokes();
+        generateBatteryLevel(ambientMode);
     }
 
     private void generateBackgroundGradient(boolean ambientMode) {
@@ -72,7 +75,7 @@ public class MinimaltBackground extends WatchFaceBase implements WatchFace {
         getCanvas().restore();
     }
 
-    private void generateActiveSecondsStroke() {
+    private void generateActiveSecondsStroke(boolean ambientMode) {
         Paint p = new Paint();
         p.setAntiAlias(true);
         p.setColor(MinimaltUtil.getColor());
@@ -80,12 +83,37 @@ public class MinimaltBackground extends WatchFaceBase implements WatchFace {
         p.setAlpha(100);
 
         int angle = (TimeUtils.getCurrentSecond(getCalendar()) * 6)-1;
+        if (ambientMode) {
+            angle = 354;
+        }
 
         for (int i = 0; i < angle+3; i=i+6) {
             getCanvas().save();
             getCanvas().rotate(i+3-90, getBounds().exactCenterX(), getBounds().exactCenterY());
             getCanvas().drawLine(getCenterX(0, (float)0.98)-18, getCenterY(0, 0.98F),
                     getCenterX(0, 0.98F), getCenterY(0, 0.98F), p);
+            getCanvas().restore();
+        }
+    }
+
+    private void generateBatteryLevel(boolean ambientMode) {
+        if (!ambientMode) {
+            Paint p = new Paint();
+            p.setColor(MinimaltUtil.getColor());
+            p.setAntiAlias(!ambientMode);
+            p.setTextSize(14);
+            p.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
+
+            getCanvas().save();
+            getCanvas().translate(-10,-10);
+            getCanvas().drawRect(getBounds().exactCenterX()-5, getBounds().exactCenterY()+82,
+                    getBounds().exactCenterX()+5, getBounds().exactCenterY()+97, p);
+            getCanvas().drawRect(getBounds().exactCenterX()-2, getBounds().exactCenterY()+79,
+                    getBounds().exactCenterX()+2, getBounds().exactCenterY()+85, p);
+
+            String bat = this.batteryLevel == null ? "" : batteryLevel.toString().split("\\.")[0]+"%";
+            getCanvas().drawText(bat, getBounds().exactCenterX()+10F,
+                    getBounds().exactCenterY()+95F, p);
             getCanvas().restore();
         }
     }
@@ -98,5 +126,9 @@ public class MinimaltBackground extends WatchFaceBase implements WatchFace {
     private float getCenterY(int angle, float percent) {
         return (float)(getBounds().exactCenterY()
                 + getRadius(percent) * Math.sin(angle*Math.PI/180));
+    }
+
+    public void setBatteryLevel(Float batteryLevel) {
+        this.batteryLevel = batteryLevel;
     }
 }
